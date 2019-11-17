@@ -3,6 +3,17 @@ const bodyParser = require("body-parser");
 const app = express();
 const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
+const knex = require("knex");
+
+const db = knex({
+  client: "pg",
+  connection: {
+    host: "127.0.0.1",
+    user: "postgres",
+    password: "12345",
+    database: "smart-brain"
+  }
+});
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -42,9 +53,6 @@ app.get("/", (req, res) => {
 app.post("/signin", (req, res) => {
   const { email, password } = req.body;
 
-  bcrypt.compare(password, hash, function(err, res) {
-    console.log(res);
-  });
   if (
     email === database.users[0].email &&
     password === database.users[0].password
@@ -57,19 +65,26 @@ app.post("/signin", (req, res) => {
 
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
-  bcrypt.hash(password, null, null, function(err, hash) {
-    console.log(hash);
-  });
-  database.users.push({
-    id: "125",
-    name: name,
-    email: email,
-    password: password,
-    entries: 0,
-    joined: new Date()
-  });
+  db("users")
+    .insert({
+      name: name,
+      email: email,
+      time: new Date()
+    })
+    .returning("*")
+    .then(user => {
+      res.json(user[0]);
+    })
+    .catch(err => res.status(400).json("unable to register"));
 
-  res.json(database.users[database.users.length - 1]);
+  // db("login").insert([
+  //   {
+  //     hash: password,
+  //     email: email
+  //   }
+  // ]);
+
+  // res.json(database.users[database.users.length - 1]);
 });
 
 app.get("/profile/:id", (req, res) => {
