@@ -68,18 +68,15 @@ app.get("/profile/:id", (req, res) => {
 });
 
 app.put("/image", (req, res) => {
-  let isUserExist = false;
-  database.users.forEach(user => {
-    if (user.id === req.body.id) {
-      isUserExist = true;
-      user.entries += 1;
-      return res.json(user);
-    }
-  });
-
-  if (!isUserExist) {
-    res.status(404).json("No such user");
-  }
+  const { id } = req.body;
+  db("users")
+    .where("id", "=", id)
+    .increment("entries", 1)
+    .returning("entries")
+    .then(data => {
+      res.json(data[0]);
+    })
+    .catch(err => res.status(400).json("unable to get count"));
 });
 
 app.listen(3000, () => {
