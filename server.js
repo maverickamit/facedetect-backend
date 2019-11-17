@@ -18,34 +18,6 @@ const db = knex({
 app.use(bodyParser.json());
 app.use(cors());
 
-const database = {
-  users: [
-    {
-      id: "123",
-      name: "John",
-      email: "john@gmail.com",
-      password: "cookies",
-      entries: 0,
-      joined: new Date()
-    },
-    {
-      id: "124",
-      name: "Sally",
-      email: "sally@gmail.com",
-      password: "bananas",
-      entries: 0,
-      joined: new Date()
-    }
-  ],
-  login: [
-    {
-      id: 987,
-      hash: "",
-      email: "john@gmail.com"
-    }
-  ]
-};
-
 app.get("/", (req, res) => {
   res.send(database.users);
 });
@@ -76,29 +48,23 @@ app.post("/register", (req, res) => {
       res.json(user[0]);
     })
     .catch(err => res.status(400).json("unable to register"));
-
-  // db("login").insert([
-  //   {
-  //     hash: password,
-  //     email: email
-  //   }
-  // ]);
-
-  // res.json(database.users[database.users.length - 1]);
 });
 
 app.get("/profile/:id", (req, res) => {
-  let isUserExist = false;
-  database.users.forEach(user => {
-    if (user.id === req.params.id) {
-      isUserExist = true;
-      return res.json(user);
-    }
-  });
-
-  if (!isUserExist) {
-    res.status(404).json("No such user");
-  }
+  const { id } = req.params;
+  db("users")
+    .where({ id })
+    .select("*")
+    .then(data => {
+      if (data.length) {
+        res.json(data[0]);
+      } else {
+        res.status(400).json("User is nonexistent!");
+      }
+    })
+    .catch(err => {
+      res.json("Something is wrong!");
+    });
 });
 
 app.put("/image", (req, res) => {
