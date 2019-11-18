@@ -37,21 +37,38 @@ app.post("/signin", (req, res) => {
 
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
-  db("users")
-    .insert({
-      name: name,
-      email: email,
-      time: new Date()
-    })
-    .returning("*")
-    .then(user => {
-      res.json(user[0]);
-    })
-    .catch(err => res.status(400).json("unable to register"));
+  var hash = bcrypt.hashSync(password);
+  bcrypt.compareSync("bacon", hash); // true
+  bcrypt.compareSync("veggies", hash); // false
+
+  db.transaction(trx => {
+    trx("login")
+      .insert({
+        hash: hash,
+        email: email
+      })
+
+      .then(() => {
+        trx("users")
+          .insert({
+            name: name,
+            email: email,
+            time: new Date()
+          })
+          .returning("*")
+          .then(user => {
+            res.json(user[0]);
+          })
+          .then(trx.commit)
+          .catch(trx.rollback);
+      })
+      .catch(err => res.status(400).json("unable to register"));
+  });
 });
 
 app.get("/profile/:id", (req, res) => {
   const { id } = req.params;
+
   db("users")
     .where({ id })
     .select("*")
