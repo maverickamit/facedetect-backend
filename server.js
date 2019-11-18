@@ -25,21 +25,22 @@ app.get("/", (req, res) => {
 app.post("/signin", (req, res) => {
   const { email, password } = req.body;
 
-  if (
-    email === database.users[0].email &&
-    password === database.users[0].password
-  ) {
-    res.json("success");
-  } else {
-    res.status(400).json("error loggin in");
-  }
+  db.select("email", "hash")
+    .from("login")
+    .where("email", "=", email)
+    .then(value => {
+      if (bcrypt.compareSync(password, value[0].hash)) {
+        res.json("success");
+      } else {
+        res.status(400).json("Wrong Credentials");
+      }
+    })
+    .catch(err => res.json("something is wrong"));
 });
 
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
   var hash = bcrypt.hashSync(password);
-  bcrypt.compareSync("bacon", hash); // true
-  bcrypt.compareSync("veggies", hash); // false
 
   db.transaction(trx => {
     trx("login")
