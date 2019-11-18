@@ -4,6 +4,8 @@ const app = express();
 const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
 const knex = require("knex");
+const register = require("./controllers/register");
+const signin = require("./controllers/signin");
 
 const db = knex({
   client: "pg",
@@ -23,48 +25,11 @@ app.get("/", (req, res) => {
 });
 
 app.post("/signin", (req, res) => {
-  const { email, password } = req.body;
-
-  db.select("email", "hash")
-    .from("login")
-    .where("email", "=", email)
-    .then(value => {
-      if (bcrypt.compareSync(password, value[0].hash)) {
-        res.json("success");
-      } else {
-        res.status(400).json("Wrong Credentials");
-      }
-    })
-    .catch(err => res.json("something is wrong"));
+  signin.handleSignin(req, res, db, bcrypt);
 });
 
 app.post("/register", (req, res) => {
-  const { email, name, password } = req.body;
-  var hash = bcrypt.hashSync(password);
-
-  db.transaction(trx => {
-    trx("login")
-      .insert({
-        hash: hash,
-        email: email
-      })
-
-      .then(() => {
-        trx("users")
-          .insert({
-            name: name,
-            email: email,
-            time: new Date()
-          })
-          .returning("*")
-          .then(user => {
-            res.json(user[0]);
-          })
-          .then(trx.commit)
-          .catch(trx.rollback);
-      })
-      .catch(err => res.status(400).json("unable to register"));
-  });
+  register.handleRegister(req, res, db, bcrypt);
 });
 
 app.get("/profile/:id", (req, res) => {
