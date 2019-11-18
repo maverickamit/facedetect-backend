@@ -6,6 +6,7 @@ const cors = require("cors");
 const knex = require("knex");
 const register = require("./controllers/register");
 const signin = require("./controllers/signin");
+const profile = require("./controllers/profile");
 
 const db = knex({
   client: "pg",
@@ -33,21 +34,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/profile/:id", (req, res) => {
-  const { id } = req.params;
-
-  db("users")
-    .where({ id })
-    .select("*")
-    .then(data => {
-      if (data.length) {
-        res.json(data[0]);
-      } else {
-        res.status(400).json("User is nonexistent!");
-      }
-    })
-    .catch(err => {
-      res.json("Something is wrong!");
-    });
+  profile.handleProfile(req, res, db);
 });
 
 app.put("/image", (req, res) => {
