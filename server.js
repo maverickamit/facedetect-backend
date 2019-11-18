@@ -7,7 +7,7 @@ const knex = require("knex");
 const register = require("./controllers/register");
 const signin = require("./controllers/signin");
 const profile = require("./controllers/profile");
-
+const counter = require("./controllers/counter");
 const db = knex({
   client: "pg",
   connection: {
@@ -38,15 +38,7 @@ app.get("/profile/:id", (req, res) => {
 });
 
 app.put("/image", (req, res) => {
-  const { id } = req.body;
-  db("users")
-    .where("id", "=", id)
-    .increment("entries", 1)
-    .returning("entries")
-    .then(data => {
-      res.json(data[0]);
-    })
-    .catch(err => res.status(400).json("unable to get count"));
+  counter.handleCounter(req, res, db);
 });
 
 app.listen(3000, () => {
