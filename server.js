@@ -18,6 +18,10 @@ const db = knex({
   }
 });
 
+app.get("/", (req, res) => {
+  res.send("it is working");
+});
+
 app.use(bodyParser.json());
 app.use(cors());
 
