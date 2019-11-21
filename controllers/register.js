@@ -16,7 +16,7 @@ const handleRegister = (req, res, db, bcrypt) => {
           .insert({
             name: name,
             email: email,
-            time: new Date()
+            joined: new Date()
           })
           .returning("*")
           .then(user => {
